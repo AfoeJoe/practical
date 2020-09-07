@@ -2,10 +2,26 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const cron = require('node-cron');
 require('dotenv/config');
+const PORT = process.env.PORT||8080;
 const Humidity = require('./models/humidity');
+const Temperature = require('./models/temperature');
 //MIDDLEWARE
 app.use(bodyParser.json());
+app.use('/', (req,res,next)=>{
+let sensorLib = require('node-dht-sensor');
+let func = ()=>{
+sensorLib.read(11,4,(err,temperature,humidity)=>{
+const temSchema = new Temperature({value:temperature});
+const humSchema = new Humidity({value:humidity});
+if(!err){
+temSchema.save();humSchema.save();}
+});
+}
+cron.schedule('* * * * *',func());
+next();
+});
 const tempRoutes = require('./routes/temperature');
 app.use('/temperature', tempRoutes);
 
@@ -14,28 +30,14 @@ app.use('/humidity', humRoutes);
 
 //DATABASE
 mongoose.connect(
-  process.env.DB,
-  { useUnifiedTopology: true, seNewUrlParser: true },
+  process.env.URI,
+  { useUnifiedTopology: true, useNewUrlParser: true },
   () => {
     console.log('connected');
   }
 );
 //ROUTES
 app.get('/', async (req, res) => {
-  let sensorLib = require('node-dht-sensor');
-  sensorLib.initialize(22, 4);
-  let interval = setInterval(() => {
-    read();
-  }, 2000);
-
-  let read = () => {
-    let readOut = sensorLib.read();
-    console.log(
-      `temperature is ${readOut.temperature.toFixed(
-        2
-      )} C. Humidity: ${readOut.humidity.toFixed(2)} %`
-    );
-  };
 
   try {
     const result = await Humidity.find();
@@ -45,4 +47,6 @@ app.get('/', async (req, res) => {
   }
 });
 //SSERVER
-app.listen(3000);
+app.listen(PORT,()=>{
+console.log('App listening on port '+PORT);
+});
