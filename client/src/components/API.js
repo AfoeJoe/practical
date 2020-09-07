@@ -1,14 +1,17 @@
-export default{
-	getTemperature:()=>{
-	return fetch('/temperature').then(res=>res.json).then(data=>data);
-	},
-	getHumidity:()=>{
-	return fetch('/humidity').then(res=>res.json).then(data=>data);
-	},
-	addTemperature:()=>{
-	return fetch('/temperature').then(res=>res.json).then(data=>data);
-	}
-
-
-
-}
+export default {
+  getTemperature: () => {
+    return fetch('/temperature')
+      .then((res) => res.json)
+      .then((data) => data);
+  },
+  getHumidity: () => {
+    return fetch('/humidity')
+      .then((res) => res.json)
+      .then((data) => data);
+  },
+  touch: () => {
+    return fetch('/temperature')
+      .then((res) => res.json)
+      .then((data) => data);
+  },
+};
