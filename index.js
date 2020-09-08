@@ -1,5 +1,10 @@
 const express = require('express');
 const app = express();
+
+const server = require('http').createServer(app);
+
+
+
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const cron = require('node-cron');
@@ -19,8 +24,14 @@ if(!err){
 temSchema.save();humSchema.save();}
 });
 }
-cron.schedule('* * * * *',func());
+cron.schedule("* * * * *",func);
 next();
+});
+
+app.use(function(req, res, next) {
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000/"); // update to match the domain you will make the request from
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
 });
 const tempRoutes = require('./routes/temperature');
 app.use('/temperature', tempRoutes);
@@ -31,22 +42,25 @@ app.use('/humidity', humRoutes);
 //DATABASE
 mongoose.connect(
   process.env.URI,
-  { useUnifiedTopology: true, useNewUrlParser: true },
-  () => {
-    console.log('connected');
-  }
+  { useUnifiedTopology: true, useNewUrlParser: true }
 );
 //ROUTES
 app.get('/', async (req, res) => {
+let Gpio = require('onoff').Gpio;
+let pushButton = new Gpio(21, 'in', 'both');
 
-  try {
-    const result = await Humidity.find();
-    res.json(result);
-  } catch (error) {
-    res.status(500).json({ message: error });
-  }
+
+
+const getIt = () =>{io.on("connection",socket=>{socket.emit("touch",{"value":pushButton.readSync()});})
+}
+
+cron.schedule("* * * * *",getIt);
+
+res.end();
+ 
 });
 //SSERVER
-app.listen(PORT,()=>{
+
+server.listen(PORT,()=>{
 console.log('App listening on port '+PORT);
 });
